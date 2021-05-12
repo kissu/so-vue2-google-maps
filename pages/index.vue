@@ -1,63 +1,111 @@
 <template>
-  <div class="container">
-    <div>
-      <Logo />
-      <h1 class="title">so-vue2-google-maps</h1>
-      <div class="links">
-        <a
-          href="https://nuxtjs.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--green"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--grey"
-        >
-          GitHub
-        </a>
-      </div>
-    </div>
+  <div>
+    <button class="blue white--text" @click="getCurrentPositionandBathroom">
+      search for bathroom!
+    </button>
+    <GmapMap
+      ref="mapRef"
+      :center="maplocation"
+      :zoom="15"
+      map-type-id="roadmap"
+      style="height: 300px; width: 900px"
+    >
+      <GmapMarker
+        v-for="m in markers"
+        :key="m.id"
+        :position="m.position"
+        :clickable="true"
+        :draggable="true"
+        :icon="m.icon"
+        @click="center = m.position"
+      />
+    </GmapMap>
   </div>
 </template>
 
 <script>
-export default {}
+import { gmapApi } from 'vue2-google-maps'
+
+export default {
+  data() {
+    return {
+      maplocation: { lat: 35.6814366, lng: 139.767157 },
+      markers: [],
+    }
+  },
+  computed: {
+    google: gmapApi,
+  },
+  methods: {
+    getCurrentPositionandBathroom() {
+      if (process.client) {
+        if (!navigator.geolocation) {
+          alert('Japanese sentences')
+          return
+        }
+        navigator.geolocation.getCurrentPosition(this.success, this.error)
+      }
+    },
+    success(position) {
+      this.maplocation.lat = position.coords.latitude
+      this.maplocation.lng = position.coords.longitude
+      // this.$gmapApiPromiseLazy().then(() => { // not needed here anymore
+      this.google.maps.event.addListenerOnce(
+        this.$refs.mapRef.$mapObject,
+        'idle',
+        function () {
+          this.getBathroom()
+        }.bind(this)
+      )
+      // })
+    },
+    getBathroom() {
+      const map = this.$refs.mapRef.$mapObject
+      const placeService = new this.google.maps.places.PlacesService(map)
+      placeService.nearbySearch(
+        {
+          location: new this.google.maps.LatLng(
+            this.maplocation.lat,
+            this.maplocation.lng
+          ),
+          radius: 500,
+          type: ['convenience_store'],
+        },
+        function (results, status) {
+          if (status === this.google.maps.places.PlacesServiceStatus.OK) {
+            results.forEach((place) => {
+              const icon = {
+                url: place.icon,
+                scaledSize: new this.google.maps.Size(30, 30),
+              }
+              const marker = {
+                position: place.geometry.location,
+                icon,
+                title: place.name,
+                id: place.place_id,
+              }
+              this.markers.push(marker)
+            })
+          }
+        }.bind(this)
+      )
+    },
+    error(errorMessage) {
+      switch (errorMessage.code) {
+        case 1:
+          alert('Japanese sentences')
+          break
+        case 2:
+          alert('Japanese sentences')
+          break
+        case 3:
+          alert('Japanese sentences')
+          break
+        default:
+          alert('Japanese sentences')
+          break
+      }
+    },
+  },
+}
 </script>
-
-<style>
-.container {
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.title {
-  font-family: 'Quicksand', 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.links {
-  padding-top: 15px;
-}
-</style>

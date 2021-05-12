@@ -1,9 +1,9 @@
 export default {
-  // Disable server-side rendering (https://go.nuxtjs.dev/ssr-mode)
   ssr: false,
-
-  // Target (https://go.nuxtjs.dev/config-target)
   target: 'static',
+  publicRuntimeConfig: {
+    apiKey: process.env.API_KEY,
+  },
 
   // Global page headers (https://go.nuxtjs.dev/config-head)
   head: {
@@ -20,7 +20,7 @@ export default {
   css: [],
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
-  plugins: [],
+  plugins: ['~/plugins/vue2-google-maps.js'],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)
   components: true,
@@ -35,5 +35,7 @@ export default {
   modules: [],
 
   // Build Configuration (https://go.nuxtjs.dev/config-build)
-  build: {},
+  build: {
+    transpile: [/^vue2-google-maps($|\/)/],
+  },
 }
